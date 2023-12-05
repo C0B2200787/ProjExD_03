@@ -4,6 +4,7 @@ import sys
 import time
 
 import pygame as pg
+import math
 
 
 WIDTH = 1600  # ゲームウィンドウの幅
@@ -43,6 +44,7 @@ class Bird:
         引数1 num：こうかとん画像ファイル名の番号
         引数2 xy：こうかとん画像の位置座標タプル
         """
+        self.dire = (+5,0)
         img0 = pg.transform.rotozoom(pg.image.load(f"{MAIN_DIR}/fig/{num}.png"), 0, 2.0)
         img = pg.transform.flip(img0, True, False)  # デフォルトのこうかとん（右向き）
         self.imgs = {  # 0度から反時計回りに定義
@@ -93,6 +95,8 @@ class Bird:
         if not (sum_mv[0] == 0 and sum_mv[1] == 0):  # なにもキーが押されていなくなかったら
             self.img = self.imgs[tuple(sum_mv)] 
         screen.blit(self.img, self.rct)
+        if not(sum_mv[0] == 0 and sum_mv[1] == 0): 
+            self.dire = (sum_mv[0], sum_mv[1])
 
 
 class Bomb:
@@ -135,7 +139,13 @@ class Beam:
         self.rct = self.img.get_rect()
         self.rct.centery = bird.rct.centery   # こうかとんの中心座標を取得
         self.rct.centerx = bird.rct.centerx+bird.rct.width/2
-        self.vx, self.vy = +5, 0
+        self.vx, self.vy = bird.dire  # こうかとんが向いている方向を取得
+        angle = math.degrees(math.atan2(-self.vy, self.vx))
+        self.img = pg.transform.rotozoom(self.img, angle, 1.0)
+        self.rct = self.img.get_rect()
+        self.rct.centery = bird.rct.centery
+        self.rct.centerx = bird.rct.centerx + bird.rct.width / 2 + self.rct.width * self.vx / 5
+        self.rct.centery = bird.rct.centery + self.rct.height * self.vy / 5
 
     def update(self, screen: pg.Surface):
         """
@@ -145,21 +155,9 @@ class Beam:
         self.rct.move_ip(self.vx, self.vy)
         screen.blit(self.img, self.rct)
 
-class Explosion:
-    def __init__(self, bomb: Bomb):
-        self.img = [pg.image.load(f"{MAIN_DIR}/fig/explosion.gif"),
-        pg.transform.flip(self.img, True, False),pg.transform.flip(self.img, False, True),
-        pg.transform.flip(self.img, True, True)]
-        self.rct = self.img[0].get_rect()
-        self.rct.centery = bomb.rct.centery   # こうかとんの中心座標を取得
-        self.life = 10
+
     
-    def update (self):
-        life -= -1
-    
-    def draw(self):
-        index = (self.life // 5) % len(self.images)
-        screen.blit(self.images[index], self.rect.topleft)
+   
 
 
 def main():
@@ -170,7 +168,6 @@ def main():
     # BombインスタンスがNUM個並んだリスト
     bombs = [Bomb() for _ in range(NUM_OF_BOMBS)]  
     beam = None
-    explosions = []
     
     
 
@@ -183,11 +180,7 @@ def main():
             if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:  # スペースキーが押されたら
                 beam = Beam(bird)  # ビームインスタンスの生成
         
-        explosions = [explosion for explosion in explosions if explosion.life > 0]
-        for explosion in explosions:
-            explosion.update()
-            explosion.draw()
-        pg.display.draw()
+        
         
         screen.blit(bg_img, [0, 0])
         """

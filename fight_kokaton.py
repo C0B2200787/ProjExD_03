@@ -145,6 +145,22 @@ class Beam:
         self.rct.move_ip(self.vx, self.vy)
         screen.blit(self.img, self.rct)
 
+class Explosion:
+    def __init__(self, bomb: Bomb):
+        self.img = [pg.image.load(f"{MAIN_DIR}/fig/explosion.gif"),
+        pg.transform.flip(self.img, True, False),pg.transform.flip(self.img, False, True),
+        pg.transform.flip(self.img, True, True)]
+        self.rct = self.img[0].get_rect()
+        self.rct.centery = bomb.rct.centery   # こうかとんの中心座標を取得
+        self.life = 10
+    
+    def update (self):
+        life -= -1
+    
+    def draw(self):
+        index = (self.life // 5) % len(self.images)
+        screen.blit(self.images[index], self.rect.topleft)
+
 
 def main():
     pg.display.set_caption("たたかえ！こうかとん")
@@ -154,6 +170,9 @@ def main():
     # BombインスタンスがNUM個並んだリスト
     bombs = [Bomb() for _ in range(NUM_OF_BOMBS)]  
     beam = None
+    explosions = []
+    
+    
 
     clock = pg.time.Clock()
     tmr = 0
@@ -164,7 +183,17 @@ def main():
             if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:  # スペースキーが押されたら
                 beam = Beam(bird)  # ビームインスタンスの生成
         
+        explosions = [explosion for explosion in explosions if explosion.life > 0]
+        for explosion in explosions:
+            explosion.update()
+            explosion.draw()
+        pg.display.draw()
+        
         screen.blit(bg_img, [0, 0])
+        """
+        in_beam = []
+        in_beam.append(self.rct)
+        if bombs"""
         
         for bomb in bombs:
             if bird.rct.colliderect(bomb.rct):
@@ -173,12 +202,13 @@ def main():
                 pg.display.update()
                 time.sleep(1)
                 return
-
+        
         for i, bomb in enumerate(bombs):
             if beam is not None and beam.rct.colliderect(bomb.rct):
                 beam = None
                 bombs[i] = None
                 bird.change_img(6, screen)
+    
         # Noneでない爆弾だけのリストを作る
         bombs = [bomb for bomb in bombs if bomb is not None]
 

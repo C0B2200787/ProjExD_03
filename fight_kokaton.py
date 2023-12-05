@@ -44,7 +44,7 @@ class Bird:
         引数1 num：こうかとん画像ファイル名の番号
         引数2 xy：こうかとん画像の位置座標タプル
         """
-        self.dire = (+5,0)
+        self.dire = (+5,0)  # 方向タプル用のインスタンス変数を定義
         img0 = pg.transform.rotozoom(pg.image.load(f"{MAIN_DIR}/fig/{num}.png"), 0, 2.0)
         img = pg.transform.flip(img0, True, False)  # デフォルトのこうかとん（右向き）
         self.imgs = {  # 0度から反時計回りに定義
@@ -95,7 +95,7 @@ class Bird:
         if not (sum_mv[0] == 0 and sum_mv[1] == 0):  # なにもキーが押されていなくなかったら
             self.img = self.imgs[tuple(sum_mv)] 
         screen.blit(self.img, self.rct)
-        if not(sum_mv[0] == 0 and sum_mv[1] == 0): 
+        if not(sum_mv[0] == 0 and sum_mv[1] == 0):   # 移動量の合計値リストが[0,0]出ないとき、self.direを合計値リストで更新する
             self.dire = (sum_mv[0], sum_mv[1])
 
 
@@ -140,10 +140,11 @@ class Beam:
         self.rct.centery = bird.rct.centery   # こうかとんの中心座標を取得
         self.rct.centerx = bird.rct.centerx+bird.rct.width/2
         self.vx, self.vy = bird.dire  # こうかとんが向いている方向を取得
-        angle = math.degrees(math.atan2(-self.vy, self.vx))
-        self.img = pg.transform.rotozoom(self.img, angle, 1.0)
-        self.rct = self.img.get_rect()
-        self.rct.centery = bird.rct.centery
+        angle = math.degrees(math.atan2(-self.vy, self.vx))  # Birdのdireにアクセスし，こうかとんが向いている方向をvx, vyに代入
+        self.img = pg.transform.rotozoom(self.img, angle, 1.0)  # math.atan2(-vy, vx)で，直交座標(x, -y)から極座標の角度Θに変換
+        self.rct = self.img.get_rect()  # math.degrees(Θ)で弧度法から度数法に変換し，rotozoomで回転
+        # こうかとんのrctのwidthとheightおよび向いている方向を考慮した初期配置
+        self.rct.centery = bird.rct.centery 
         self.rct.centerx = bird.rct.centerx + bird.rct.width / 2 + self.rct.width * self.vx / 5
         self.rct.centery = bird.rct.centery + self.rct.height * self.vy / 5
 
